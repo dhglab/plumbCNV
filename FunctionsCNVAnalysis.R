@@ -1,17 +1,22 @@
-# This is the first function called by the user - it sources all the other R scripts used to run plumbCNV
-set_up <- function(scr.dir) {
-	library(reader)
-	if(file.exists(cat.path(scr.dir,"generalCNVFunctions.R"))) {
-  		source(cat.path(scr.dir,"generalCNVFunctions.R"))
-  		source(cat.path(scr.dir,"simulationFunctions.R"))
-  		source(cat.path(scr.dir,"validationFunctions.R"))
-  		source(cat.path(scr.dir,"qcScripts.R"))
-  		source(cat.path(scr.dir,"tdtFunctions.R"))
-  		source(cat.path(scr.dir,"SnpMatrixList.R"))
- 		library(bigpca) # will also load reader and NCmisc
-	} else {
-  		warning("Didn't find external script files, or was run not from ",scr.dir)
-	}
+## SET UP plumbCNV
+args <- commandArgs(trailingOnly=TRUE)
+
+if(length(args)!=1) {
+	stop("You must provide the full path to plumbCNV's R scripts when calling it.")
+}
+scr.dir <- args[1]
+library(reader)
+
+if(file.exists(cat.path(scr.dir,"generalCNVFunctions.R"))) {
+  	source(cat.path(scr.dir,"generalCNVFunctions.R"))
+  	source(cat.path(scr.dir,"simulationFunctions.R"))
+  	source(cat.path(scr.dir,"validationFunctions.R"))
+  	source(cat.path(scr.dir,"qcScripts.R"))
+  	source(cat.path(scr.dir,"tdtFunctions.R"))
+  	source(cat.path(scr.dir,"SnpMatrixList.R"))
+ 	library(bigpca) # will also load reader and NCmisc
+} else {
+  	stop("Didn't find external script files, or was run not from ",scr.dir)
 }
 
 ###FUNCTION INDEX ########
