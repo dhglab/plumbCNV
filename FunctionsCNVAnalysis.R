@@ -1,21 +1,17 @@
-#options(stringsAsFactors=FALSE)
-
-if(!exists("scr.dir")) { scr.dir <- "/home/ncooper/github/plumbCNV/" }
-
-library(reader)
-
-
-if(file.exists(cat.path(scr.dir,"generalCNVFunctions.R"))) {
-  source(cat.path(scr.dir,"generalCNVFunctions.R"))
-  source(cat.path(scr.dir,"simulationFunctions.R"))
-  source(cat.path(scr.dir,"validationFunctions.R"))
-  source(cat.path(scr.dir,"qcScripts.R"))
-  source(cat.path(scr.dir,"tdtFunctions.R"))
-  source(cat.path(scr.dir,"SnpMatrixList.R"))
-#  library(humarray) # source(cat.path(ifun.dir,"iFunctions.R"))  use the latter if humarray not installed
-  library(bigpca) # will also load reader and NCmisc
-} else {
-  warning("Didn't find external script files, or was run not from ",scr.dir)
+# This is the first function called by the user - it sources all the other R scripts used to run plumbCNV
+set_up <- function(scr.dir) {
+	library(reader)
+	if(file.exists(cat.path(scr.dir,"generalCNVFunctions.R"))) {
+  		source(cat.path(scr.dir,"generalCNVFunctions.R"))
+  		source(cat.path(scr.dir,"simulationFunctions.R"))
+  		source(cat.path(scr.dir,"validationFunctions.R"))
+  		source(cat.path(scr.dir,"qcScripts.R"))
+  		source(cat.path(scr.dir,"tdtFunctions.R"))
+  		source(cat.path(scr.dir,"SnpMatrixList.R"))
+ 		library(bigpca) # will also load reader and NCmisc
+	} else {
+  		warning("Didn't find external script files, or was run not from ",scr.dir)
+	}
 }
 
 ###FUNCTION INDEX ########
@@ -6325,7 +6321,7 @@ prepare.penncnv.markers <- function(snp.info,lrr.descr, baf.descr="BAFdescrFile"
 
 
 get.trios.cmd <- function(dir,gc.out.fn="marker.gcm",baf.out.fn="BAF.pfb",ped.file="my.ped",combined.file="raw.merge2.cnv",
-                         perl.path="perl",penn.path="/usr/local/bin/penncnv/",pref="family",relative=F,hmm="hh550.hmm",joint=FALSE)
+                         perl.path="perl",penn.path=paste(Sys.getenv(c("PENNCNV_DIR")),"/",sep = "", collapse = NULL),pref="family",relative=F,hmm="hh550.hmm",joint=FALSE)
 {
   # this function generates calls to runn penn-cnv for 'ndir' directories created by plumbcnv
   # can run with either absolute or relative file paths. marker.fn is a list
@@ -6389,7 +6385,7 @@ get.trios.cmd <- function(dir,gc.out.fn="marker.gcm",baf.out.fn="BAF.pfb",ped.fi
 
 
 get.penn.cmd <- function(dir,gc.out.fn="marker.gcm",baf.out.fn="BAF.pfb",use.penn.gc=T,
-                         perl.path="perl", penn.path="/usr/local/bin/penncnv/",pref="output",relative=F,hmm="hh550.hmm")
+                         perl.path="perl", penn.path=paste(Sys.getenv(c("PENNCNV_DIR")),"/",sep = "", collapse = NULL),pref="output",relative=F,hmm="hh550.hmm")
 {
   # this function generates calls to runn penn-cnv for 'ndir' directories created by plumbcnv
   # can run with either absolute or relative file paths. marker.fn is a list
@@ -6429,7 +6425,7 @@ get.penn.cmd <- function(dir,gc.out.fn="marker.gcm",baf.out.fn="BAF.pfb",use.pen
 }  
 
 
-process.penn.results <- function(dir,sample.info=NULL,perl.path="perl",penn.path="/usr/local/bin/penncnv/",build="hg18",
+process.penn.results <- function(dir,sample.info=NULL,perl.path="perl",penn.path=paste(Sys.getenv(c("PENNCNV_DIR")),"/",sep = "", collapse = NULL),build="hg18",
                                  min.sites=10,rare.olp=.5,rare.pc=1,baf.fn="BAF.pfb",cnv.qc=T,rare.qc=T,
                                  plate.qc=T,pval=0.05,del.rate=0.4,dup.rate=0.18,thr.sd=3,plate.thr=3,
                                  rmv.low.plates=F,raw.main="raw",plink.out="plink.cnv",rmv.bad.reg=T,
@@ -6817,7 +6813,7 @@ do.penn.qsub <- function(penn.calls, dir, hrs.guess=1, grid.name="all.q", cluste
 #' Jobs can give errors and still complete, so TRUE may not necessarily mean that things ran as expected.
 #' As a side effect, your commands should have been run on different nodes of the queue.
 #' @examples
-#' bash.qsub(paste("sleep",sample(5,100,replace=T)),dir="~/barrett/TEST/",stagger=1, max.conc=20,interval=10,logpref="TT_")
+#' bash.qsub(paste("sleep",sample(5,100,replace=T)),dir=~/barrett/TEST/,stagger=1, max.conc=20,interval=10,logpref="TT_")
 bash.qsub <- function(bash.commands, dir=getwd(), hrs.guess=NA, stagger=0, max.conc=NA,
                       grid.name="all.q", cluster.fn="q.cmd", interval=60, logpref="X") {
   cat(" submitting bash commands to grid...\n")
@@ -6965,7 +6961,7 @@ run.PENN.trios <- function(ped.file="my.ped",combined.file="raw.merge2.cnv",hmm=
 
 run.PENN.cnv <- function(DT=NULL,dir=NULL,num.pcs=NA,LRR.fn=NULL,BAF.fn="BAFdescrFile",
             n.cores=1,q.cores=NA,grid.id="all.q",cluster.fn="q.cmd",relative=T,run.manual=F,low.ram=T,
-            penn.path="/usr/local/bin/penncnv/", perl.path="perl", build="hg18",sample.info=NULL,snp.info=NULL,
+            penn.path=paste(Sys.getenv(c("PENNCNV_DIR")),"/",sep = "", collapse = NULL), perl.path="perl", build="hg18",sample.info=NULL,snp.info=NULL,
             restore.mode=F,print.cmds=F,hide.penn.out=T,hmm="hh550.hmm",use.penn.gc=T,trio=FALSE,...)
 {
   #takes PC corrected data, generates the prerequisite PENN-CNV input files
@@ -7140,7 +7136,7 @@ run.PENN.cnv <- function(DT=NULL,dir=NULL,num.pcs=NA,LRR.fn=NULL,BAF.fn="BAFdesc
 
 
 
-run.CNV.qc <- function(DT=NULL,dir=NULL,num.pcs=NA,penn.path="/usr/local/bin/penncnv/", perl.path="perl",
+run.CNV.qc <- function(DT=NULL,dir=NULL,num.pcs=NA,penn.path=paste(Sys.getenv(c("PENNCNV_DIR")),"/",sep = "", collapse = NULL), perl.path="perl",
                          build="hg18",sample.info=NULL,snp.info=NULL,
                          out.format="Ranges",result.pref="cnvResults",
                          cnv.qc=T,rare.qc=T,plate.qc=T,restore.mode=F,trio=FALSE,joint=FALSE,ped.file="my.ped",
@@ -7816,7 +7812,7 @@ lrr.by.copy <- function(SD=F,penn.file=F,...) {
 }
 
 
-read.penn.hmm.pars <- function(file="/usr/local/bin/penncnv64/lib/hh550.hmm",mn=T,sd=T) {
+read.penn.hmm.pars <- function(file=paste(Sys.getenv(c("PENNCNV_DIR")),"/lib/hh550.hmm",sep = "", collapse = NULL),mn=T,sd=T) {
   if(!file.exists(file)) { 
     mnz <- NULL; sdz <- NULL 
   } else {
@@ -10824,7 +10820,7 @@ init.dirs.fn <- function(dir,overwrite=F,ignore=c("raw","sup"),
 
 
 check.readiness <- function(dir=NULL,mode=2,snp.mode=1,penn.check=T,plink.check=T,plink.cmd="plink",
-                            penn.path="/usr/local/bin/penncnv/",perl.path="perl",verbose=T,hmm="hh550.hmm") {
+                            penn.path=paste(Sys.getenv(c("PENNCNV_DIR")),"/",sep = "", collapse = NULL),perl.path="perl",verbose=T,hmm="hh550.hmm") {
   ## check whether all appropriate files are in place to run plumbCNV
   ## Check for appropriate Penn CNV installation
   # mode 1: run the pipeline starting from a raw genome studio file, using file.spec.txt
@@ -11016,7 +11012,7 @@ plumbCNV <- function(dir.base,dir.raw,snp.support="snpdata.map",gsf=gsf,delete.a
                      pc.to.keep=.11,assoc=F,n.store=50,correct.sex=F,
                      add.int=F,exclude.bad.reg=T,preserve.median=F,
                      comparison=T,comp.gc=F,comps="plate",use.penn.gc=F,
-                     penn.path="/usr/local/bin/penncnv64/",perl.path="perl",plink.cmd="plink",hmm="hh550.hmm",
+                     penn.path=paste(Sys.getenv(c("PENNCNV_DIR")),"/",sep = "", collapse = NULL),perl.path="perl",plink.cmd="plink",hmm="hh550.hmm",
                      relative=F,run.manual=F,print.cmds=F,trio=F,joint=F,ped.file="my.ped",qs.trios=F,
                      result.pref="cnvResults",out.format="Ranges",results="DT",print.summary.overlaps=F,
                      cnv.qc=T,rare.qc=T,plate.qc=T,pval=0.05,del.rate=0.4,dup.rate=0.18,thr.sd=3,plate.thr=3,
