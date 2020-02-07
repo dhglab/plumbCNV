@@ -1,22 +1,26 @@
-## SET UP plumbCNV
+## SET UP plumbCN
+.libPaths("/u/project/eeskin/geschwind/hchoi/R/x86_64-pc-linux-gnu-library/3.3/")
+.libPaths() # output location of libraries being used
+
 args <- commandArgs(trailingOnly=TRUE)
 
 if(length(args)!=1) {
 	stop("You must provide the full path to plumbCNV's R scripts when calling it.")
 }
-scr.dir <- args[1]
+source_dir <- args[1]
+
 library(reader)
 
-if(file.exists(cat.path(scr.dir,"generalCNVFunctions.R"))) {
-  	source(cat.path(scr.dir,"generalCNVFunctions.R"))
-  	source(cat.path(scr.dir,"simulationFunctions.R"))
-  	source(cat.path(scr.dir,"validationFunctions.R"))
-  	source(cat.path(scr.dir,"qcScripts.R"))
-  	source(cat.path(scr.dir,"tdtFunctions.R"))
-  	source(cat.path(scr.dir,"SnpMatrixList.R"))
+if(file.exists(cat.path(source_dir,"generalCNVFunctions.R"))) {
+  	source(cat.path(source_dir,"generalCNVFunctions.R"))
+  	source(cat.path(source_dir,"simulationFunctions.R"))
+  	source(cat.path(source_dir,"validationFunctions.R"))
+  	source(cat.path(source_dir,"qcScripts.R"))
+  	source(cat.path(source_dir,"tdtFunctions.R"))
+  	source(cat.path(source_dir,"SnpMatrixList.R"))
  	library(bigpca) # will also load reader and NCmisc
 } else {
-  	stop("Didn't find external script files, or was run not from ",scr.dir)
+  	stop("Didn't find external script files, or was run not from ",source_dir)
 }
 
 ###FUNCTION INDEX ########
@@ -4900,7 +4904,7 @@ force.good.plink <- function(fn,silent=FALSE) {
 
 
 
-init.DATA.read <- function(dir,doLRR=T,doBAF=F,plink.imp=F,n.cores=1,scr.name="getDataGS.sh",scr.dir="",own.fam.file=FALSE,
+init.DATA.read <- function(dir,doLRR=T,doBAF=F,plink.imp=F,n.cores=1,source_name="getDataGS.sh",source_dir="",own.fam.file=FALSE,
                            hwe.thr=10^-8, callrate.samp.thr=.95, callrate.snp.thr=.95, manual.col.nums=NULL,
                            snp.info.sup="snpdata.map",genome.stud.file=F,combine.files=F) 
 {
@@ -4912,8 +4916,8 @@ init.DATA.read <- function(dir,doLRR=T,doBAF=F,plink.imp=F,n.cores=1,scr.name="g
   } else {
     combin <- ""
   }
-  if(is.null(scr.dir) | all(scr.dir=="")) {
-    scr.dir <- dir$scr
+  if(is.null(source_dir) | all(source_dir=="")) {
+    source_dir <- dir$scr
   }
   # make sure file.spec.txt is in place and if not, make a template ready to modify
   fspec <- cat.path(dir$lrr.dat,"file.spec.txt")
@@ -4923,8 +4927,8 @@ init.DATA.read <- function(dir,doLRR=T,doBAF=F,plink.imp=F,n.cores=1,scr.name="g
     cat("easily modified to a correct setup file>>>>. \n\n")
     cat("\nRunning bash data import script in template mode\n")
     my.cmd <- paste(" -t -F '",dir$raw,"' -O '",dir$base,"'",sep="")
-    scr.file <- cat.path(scr.dir,scr.name,must.exist=T)
-    cmd <- paste(scr.file,my.cmd,collapse="",sep="")
+    source_file <- cat.path(source_dir,source_name,must.exist=T)
+    cmd <- paste(source_file,my.cmd,collapse="",sep="")
     cat(cmd,"\n")
     system(command=cmd)
     #ie: ./getDataGS.sh -t -F '/Raw/GenomeStudio' -O '/MyCNV'
@@ -4969,8 +4973,8 @@ init.DATA.read <- function(dir,doLRR=T,doBAF=F,plink.imp=F,n.cores=1,scr.name="g
       cat("\nRunning bash data import script\n")
       my.cmd <- paste(" -lSM",gs,combin," -N ",n.cores," -T 'LRR' -F '",dir$raw,"' -O '",
                       dir$base,"' -m '",snp.info.sup,"'",colntxt,sep="")
-      scr.file <- cat.path(scr.dir,scr.name,must.exist=T)
-      cmd <- paste(scr.file,my.cmd,collapse="",sep="")
+      source_file <- cat.path(source_dir,source_name,must.exist=T)
+      cmd <- paste(source_file,my.cmd,collapse="",sep="")
       cat(cmd,"\n")
       system(command=cmd)
     } else {
@@ -4984,8 +4988,8 @@ init.DATA.read <- function(dir,doLRR=T,doBAF=F,plink.imp=F,n.cores=1,scr.name="g
                       dir$base,"' -m '",snp.info.sup,"'",
                       " -x ",callrate.samp.thr," -y ",callrate.snp.thr," -z ",
                        format(hwe.thr,digits=9,scientific=F),colntxt,sep="")
-      scr.file <- cat.path(scr.dir,scr.name,must.exist=T)
-      cmd <- paste(scr.file,my.cmd,collapse="",sep="")
+      source_file <- cat.path(source_dir,source_name,must.exist=T)
+      cmd <- paste(source_file,my.cmd,collapse="",sep="")
       cat(cmd,"\n")
       system(command=cmd)
     }
@@ -4996,8 +5000,8 @@ init.DATA.read <- function(dir,doLRR=T,doBAF=F,plink.imp=F,n.cores=1,scr.name="g
     cat("\nRunning bash data import script for BAF data\n")
     if(combin!="") { combin <- paste(" -",combin,sep="") }
     my.cmd <- paste("",combin," -N ",n.cores," -T 'BAF' -F '",dir$raw,"' -O '",dir$base,"'",sep="")
-    scr.file <- cat.path(scr.dir,scr.name,must.exist=T)
-    cmd <- paste(scr.file,my.cmd,collapse="",sep="")
+    source_file <- cat.path(source_dir,source_name,must.exist=T)
+    cmd <- paste(source_file,my.cmd,collapse="",sep="")
     cat(cmd,"\n")
     system(command=cmd)
   }
@@ -10710,28 +10714,28 @@ init.dirs.fn <- function(dir,overwrite=F,ignore=c("raw","sup"),
   #prv(update.bash)
   if(update.bash) 
   {  
-    scr.file <- cat.path(dir$scr,bash.file)
-    #prv(scr.file)
-    if(!file.exists(scr.file)) {
+    source_file <- cat.path(dir$scr,bash.file)
+    #prv(source_file)
+    if(!file.exists(source_file)) {
       src <- cat.path(info.dir,bash.file)
      # prv(src)
       if(file.exists(src)) {
-        file.copy(from=src,to=scr.file,recursive=T,overwrite=T)
+        file.copy(from=src,to=source_file,recursive=T,overwrite=T)
       } else {
        # gs <- gs.bash.http()
        # if(!is.null(gs)) {
        #   # GITHUB WAY:
-       #   writeLines(gs,con=scr.file)
-       #   cat(" copied file",basename(scr.file),"\ninto:",dir$scr,"\nfrom github/plumbCNV/ \n")
+       #   writeLines(gs,con=source_file)
+       #   cat(" copied file",basename(source_file),"\ninto:",dir$scr,"\nfrom github/plumbCNV/ \n")
        # } else {
           ## RFORGE WAY:
           warning("Did not find script file getDataGS.sh, reverting to RForge revision 9 of the script, dated 31 MAR 2015")
           rforge.url <- "http://r-forge.r-project.org/scm/viewvc.php/*checkout*/scripts/getDataGS.sh?revision=9&root=plumbcnv"
-          download.file(url=rforge.url,destfile=scr.file)
-          cat(" copied file",basename(scr.file),"\ninto:",dir$scr,"\nfrom Rforge/plumbcnv/ \n")
+          download.file(url=rforge.url,destfile=source_file)
+          cat(" copied file",basename(source_file),"\ninto:",dir$scr,"\nfrom Rforge/plumbcnv/ \n")
        # }
       }
-      system(paste("chmod +x",scr.file))
+      system(paste("chmod +x",source_file))
     }
   }
   copy.from.aux <- function(src,targ) {
